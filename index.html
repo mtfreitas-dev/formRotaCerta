@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Avaliação da reserva</title>
+<title>Avaliação da excursão</title>
 <style>
 :root{
   box-sizing:border-box;
@@ -48,6 +48,8 @@ button{font:inherit;font-weight:600;width:100%;padding:12px;border:0;border-radi
 button:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
 .err{color:var(--err);font-size:.85rem;margin-top:4px;display:none}
 .invalid .err{display:block}
+.invalid input[type=text]{border-color:var(--err)}
+.req{color:var(--err);margin-left:2px}
 #ok{display:none;text-align:center}
 #ok h2{color:var(--ok);margin:0 0 8px}
 #ok .stars-ro{font-size:2rem;color:var(--star-on)}
@@ -58,23 +60,23 @@ button:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
 <main>
   <form id="form" novalidate>
     <h1>Avaliar excursão</h1>
-    <p class="sub">Conte como foi sua experiência.</p>
+    <p class="sub">Conte como foi sua experiência. Campos com <span class="req">*</span> são obrigatórios.</p>
 
     <div class="field" data-f="excursao">
-      <label for="excursao">Código da excursão</label>
-      <input type="text" id="excursao" maxlength="30" autocomplete="off" placeholder="Ex.: EXC-0001" required>
-      <div class="err">Informe o código da excursão.</div>
+      <label for="excursao">Código da excursão <span class="req" aria-hidden="true">*</span></label>
+      <input type="text" id="excursao" maxlength="8" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="EXC-0000" pattern="EXC-[0-9]{4}" aria-required="true" required>
+      <div class="err" id="errExc">Informe o código da excursão.</div>
     </div>
 
     <div class="field" data-f="nome">
-      <label for="nome">Avaliação</label>
+      <label for="nome">Avaliação <span class="req" aria-hidden="true">*</span></label>
       <input type="text" id="nome" maxlength="80" placeholder="Dê um título à sua avaliação" required>
       <div class="hint"><span class="err" style="margin:0">Informe um título.</span><span id="cNome">0/80</span></div>
     </div>
 
     <fieldset class="field" data-f="nota">
-      <legend>Nota da excursão</legend>
-      <div class="stars" role="radiogroup" aria-label="Nota de 1 a 5">
+      <legend>Nota da excursão <span class="req" aria-hidden="true">*</span></legend>
+      <div class="stars" role="radiogroup" aria-required="true" aria-label="Nota de 1 a 5">
         <input type="radio" name="nota" id="n5" value="5"><label for="n5" title="5 – Excelente">★</label>
         <input type="radio" name="nota" id="n4" value="4"><label for="n4" title="4 – Muito bom">★</label>
         <input type="radio" name="nota" id="n3" value="3"><label for="n3" title="3 – Bom">★</label>
@@ -86,8 +88,8 @@ button:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
     </fieldset>
 
     <fieldset class="field" data-f="notaGuia">
-      <legend>Nota do guia</legend>
-      <div class="stars" role="radiogroup" aria-label="Nota do guia de 1 a 5">
+      <legend>Nota do guia <span class="req" aria-hidden="true">*</span></legend>
+      <div class="stars" role="radiogroup" aria-required="true" aria-label="Nota do guia de 1 a 5">
         <input type="radio" name="notaGuia" id="g5" value="5"><label for="g5" title="5 – Excelente">★</label>
         <input type="radio" name="notaGuia" id="g4" value="4"><label for="g4" title="4 – Muito bom">★</label>
         <input type="radio" name="notaGuia" id="g3" value="3"><label for="g3" title="3 – Bom">★</label>
@@ -122,6 +124,11 @@ const $=id=>document.getElementById(id);
 const nome=$('nome'), com=$('comentario');
 nome.addEventListener('input',()=>$('cNome').textContent=nome.value.length+'/80');
 com.addEventListener('input',()=>$('cCom').textContent=com.value.length+'/255');
+const exc=$('excursao'), reExc=/^EXC-\d{4}$/;
+exc.addEventListener('input',()=>{
+  exc.value=exc.value.toUpperCase().replace(/\s/g,'');
+  form.querySelector('[data-f=excursao]').classList.remove('invalid');
+});
 form.addEventListener('change',e=>{
   if(e.target.name==='nota'||e.target.name==='notaGuia'){
     $(e.target.name==='nota'?'rotulo':'rotuloGuia').textContent=e.target.value+' – '+labels[e.target.value];
@@ -132,15 +139,17 @@ form.addEventListener('submit',e=>{
   e.preventDefault();
   const nota=form.querySelector('input[name=nota]:checked');
   const notaGuia=form.querySelector('input[name=notaGuia]:checked');
-  const checks={excursao:!!$('excursao').value.trim(),nome:!!nome.value.trim(),nota:!!nota,notaGuia:!!notaGuia};
+  const codigo=exc.value.trim().toUpperCase();
+  const checks={excursao:reExc.test(codigo),nome:!!nome.value.trim(),nota:!!nota,notaGuia:!!notaGuia};
+  $('errExc').textContent=codigo?'Use o formato EXC-0000 (EXC, hífen e 4 números).':'Informe o código da excursão.';
   let valid=true;
   for(const k in checks){
     const el=form.querySelector('[data-f='+k+']');
     el.classList.toggle('invalid',!checks[k]);
-    if(!checks[k]) valid=false;
+    if(!checks[k]){ if(valid) el.scrollIntoView({block:'center',behavior:'smooth'}); valid=false; }
   }
   if(!valid) return;
-  const dados={Excursao__c:$('excursao').value.trim(),Name:nome.value.trim(),Nota__c:nota.value,NotaGuia__c:notaGuia.value,Comentario__c:com.value.trim()};
+  const dados={Excursao__c:codigo,Name:nome.value.trim(),Nota__c:nota.value,NotaGuia__c:notaGuia.value,Comentario__c:com.value.trim()};
   console.log('Dados da avaliação:',dados);
   $('okStars').textContent='★'.repeat(+nota.value)+'☆'.repeat(5-nota.value);
   $('okTxt').textContent='“'+dados.Name+'” – Excursão: '+nota.value+'/5, Guia: '+notaGuia.value+'/5';
