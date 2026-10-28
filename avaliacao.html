@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Avaliação da reserva</title>
+<style>
+:root{
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+  --bg:#eef3f8; --card:#ffffff; --ink:#1b2a3a; --muted:#5b6b7c; --line:#c9d5e2;
+  --brand:#1f6fb5; --star-off:#c9d5e2; --star-on:#f2a900; --ok:#1d7a4d; --err:#b3261e;
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#101820; --card:#18232f; --ink:#e8eef5; --muted:#9db0c3; --line:#2f4156;
+    --brand:#5aa7e6; --star-off:#34475c; --star-on:#ffc933; --ok:#5fd09a; --err:#ff8a80;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#101820; --card:#18232f; --ink:#e8eef5; --muted:#9db0c3; --line:#2f4156;
+  --brand:#5aa7e6; --star-off:#34475c; --star-on:#ffc933; --ok:#5fd09a; --err:#ff8a80;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Source Sans 3","Segoe UI",system-ui,sans-serif;line-height:1.5;min-height:100vh;display:grid;place-items:center;padding:24px 16px}
+main{width:100%;max-width:520px;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:28px}
+h1{font-size:1.5rem;margin:0 0 4px}
+p.sub{margin:0 0 24px;color:var(--muted)}
+label,legend{display:block;font-weight:600;margin-bottom:6px;padding:0}
+fieldset{border:0;padding:0;margin:0 0 20px}
+.field{margin-bottom:20px}
+input[type=text],textarea,select{width:100%;font:inherit;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:10px 12px}
+textarea{resize:vertical;min-height:110px}
+input:focus-visible,textarea:focus-visible,select:focus-visible{outline:2px solid var(--brand);outline-offset:1px}
+.hint{display:flex;justify-content:space-between;font-size:.85rem;color:var(--muted);margin-top:4px}
+.stars{display:flex;flex-direction:row-reverse;justify-content:flex-end;gap:4px}
+.stars input{position:absolute;opacity:0;pointer-events:none}
+.stars label{font-size:2.4rem;line-height:1;color:var(--star-off);cursor:pointer;margin:0;transition:color .12s,transform .12s}
+.stars label:hover,.stars label:hover ~ label,.stars input:checked ~ label{color:var(--star-on)}
+.stars label:active{transform:scale(.9)}
+.stars input:focus-visible + label{outline:2px solid var(--brand);border-radius:4px}
+#rotulo,#rotuloGuia{margin-top:4px;font-size:.9rem;color:var(--muted);min-height:1.4em}
+button{font:inherit;font-weight:600;width:100%;padding:12px;border:0;border-radius:6px;background:var(--brand);color:#fff;cursor:pointer}
+button:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+.err{color:var(--err);font-size:.85rem;margin-top:4px;display:none}
+.invalid .err{display:block}
+#ok{display:none;text-align:center}
+#ok h2{color:var(--ok);margin:0 0 8px}
+#ok .stars-ro{font-size:2rem;color:var(--star-on)}
+#ok button{margin-top:16px;background:transparent;color:var(--brand);border:1px solid var(--brand)}
+</style>
+</head>
+<body>
+<main>
+  <form id="form" novalidate>
+    <h1>Avaliar excursão</h1>
+    <p class="sub">Conte como foi sua experiência.</p>
+
+    <div class="field" data-f="excursao">
+      <label for="excursao">Código da excursão</label>
+      <input type="text" id="excursao" maxlength="30" autocomplete="off" placeholder="Ex.: EXC-0001" required>
+      <div class="err">Informe o código da excursão.</div>
+    </div>
+
+    <div class="field" data-f="nome">
+      <label for="nome">Avaliação</label>
+      <input type="text" id="nome" maxlength="80" placeholder="Dê um título à sua avaliação" required>
+      <div class="hint"><span class="err" style="margin:0">Informe um título.</span><span id="cNome">0/80</span></div>
+    </div>
+
+    <fieldset class="field" data-f="nota">
+      <legend>Nota da excursão</legend>
+      <div class="stars" role="radiogroup" aria-label="Nota de 1 a 5">
+        <input type="radio" name="nota" id="n5" value="5"><label for="n5" title="5 – Excelente">★</label>
+        <input type="radio" name="nota" id="n4" value="4"><label for="n4" title="4 – Muito bom">★</label>
+        <input type="radio" name="nota" id="n3" value="3"><label for="n3" title="3 – Bom">★</label>
+        <input type="radio" name="nota" id="n2" value="2"><label for="n2" title="2 – Regular">★</label>
+        <input type="radio" name="nota" id="n1" value="1"><label for="n1" title="1 – Ruim">★</label>
+      </div>
+      <div id="rotulo">Escolha de 1 a 5</div>
+      <div class="err">Escolha uma nota de 1 a 5.</div>
+    </fieldset>
+
+    <fieldset class="field" data-f="notaGuia">
+      <legend>Nota do guia</legend>
+      <div class="stars" role="radiogroup" aria-label="Nota do guia de 1 a 5">
+        <input type="radio" name="notaGuia" id="g5" value="5"><label for="g5" title="5 – Excelente">★</label>
+        <input type="radio" name="notaGuia" id="g4" value="4"><label for="g4" title="4 – Muito bom">★</label>
+        <input type="radio" name="notaGuia" id="g3" value="3"><label for="g3" title="3 – Bom">★</label>
+        <input type="radio" name="notaGuia" id="g2" value="2"><label for="g2" title="2 – Regular">★</label>
+        <input type="radio" name="notaGuia" id="g1" value="1"><label for="g1" title="1 – Ruim">★</label>
+      </div>
+      <div id="rotuloGuia" class="rotulo">Escolha de 1 a 5</div>
+      <div class="err">Escolha uma nota de 1 a 5 para o guia.</div>
+    </fieldset>
+
+    <div class="field">
+      <label for="comentario">Comentário</label>
+      <textarea id="comentario" maxlength="255" placeholder="O que você gostou ou não gostou?"></textarea>
+      <div class="hint"><span></span><span id="cCom">0/255</span></div>
+    </div>
+
+    <button type="submit">Enviar avaliação</button>
+  </form>
+
+  <section id="ok" aria-live="polite">
+    <h2>Avaliação enviada</h2>
+    <div class="stars-ro" id="okStars"></div>
+    <p id="okTxt"></p>
+    <button type="button" id="nova">Fazer outra avaliação</button>
+  </section>
+</main>
+
+<script>
+const form=document.getElementById('form'), ok=document.getElementById('ok');
+const labels={1:'Ruim',2:'Regular',3:'Bom',4:'Muito bom',5:'Excelente'};
+const $=id=>document.getElementById(id);
+const nome=$('nome'), com=$('comentario');
+nome.addEventListener('input',()=>$('cNome').textContent=nome.value.length+'/80');
+com.addEventListener('input',()=>$('cCom').textContent=com.value.length+'/255');
+form.addEventListener('change',e=>{
+  if(e.target.name==='nota'||e.target.name==='notaGuia'){
+    $(e.target.name==='nota'?'rotulo':'rotuloGuia').textContent=e.target.value+' – '+labels[e.target.value];
+    form.querySelector('[data-f='+e.target.name+']').classList.remove('invalid');
+  }
+});
+form.addEventListener('submit',e=>{
+  e.preventDefault();
+  const nota=form.querySelector('input[name=nota]:checked');
+  const notaGuia=form.querySelector('input[name=notaGuia]:checked');
+  const checks={excursao:!!$('excursao').value.trim(),nome:!!nome.value.trim(),nota:!!nota,notaGuia:!!notaGuia};
+  let valid=true;
+  for(const k in checks){
+    const el=form.querySelector('[data-f='+k+']');
+    el.classList.toggle('invalid',!checks[k]);
+    if(!checks[k]) valid=false;
+  }
+  if(!valid) return;
+  const dados={Excursao__c:$('excursao').value.trim(),Name:nome.value.trim(),Nota__c:nota.value,NotaGuia__c:notaGuia.value,Comentario__c:com.value.trim()};
+  console.log('Dados da avaliação:',dados);
+  $('okStars').textContent='★'.repeat(+nota.value)+'☆'.repeat(5-nota.value);
+  $('okTxt').textContent='“'+dados.Name+'” – Excursão: '+nota.value+'/5, Guia: '+notaGuia.value+'/5';
+  form.style.display='none'; ok.style.display='block';
+});
+$('nova').addEventListener('click',()=>{
+  form.reset(); $('rotulo').textContent='Escolha de 1 a 5'; $('rotuloGuia').textContent='Escolha de 1 a 5';
+  $('cNome').textContent='0/80'; $('cCom').textContent='0/255';
+  ok.style.display='none'; form.style.display='block';
+});
+</script>
+</body>
+</html>
